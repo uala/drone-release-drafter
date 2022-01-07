@@ -2,7 +2,7 @@ FROM ruby:3.1.0-slim
 
 # Install rugged dependencies
 RUN apt-get update -qq \
-    && apt-get install cmake zlib1g zlib1g-dev libssh2-1-dev -y \
+    && apt-get install cmake zlib1g zlib1g-dev libssh2-1-dev git -y \
     && rm -rf /var/lib/apt/lists/*
 
 RUN gem install bundler -v 2.3.3
