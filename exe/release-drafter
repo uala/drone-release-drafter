@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+
+require 'release_drafter'
+
+action = ENV.fetch('PLUGIN_ACTION', 'draft').to_sym
+
+case action
+when :draft
+  drafter = ReleaseDrafter::Drafter.new
+  drafter.draft!
+end

@@ -1,0 +1,11 @@
+/.bundle/
+/coverage/
+/doc/
+/spec/reports/
+/tmp/
+
+# rspec failure tracking
+.rspec_status
+
+# Since it's a gem ignore Gemfile.lock
+Gemfile.lock
