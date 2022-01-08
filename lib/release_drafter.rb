@@ -1,7 +1,6 @@
 require 'release_drafter/github_client'
-require 'release_drafter/release_changelog'
-require 'release_drafter/release_version'
-require 'release_drafter/version'
+require 'release_drafter/changelog'
+require 'release_drafter/version_resolver'
 require 'logger'
 
 module ReleaseDrafter
@@ -51,8 +50,8 @@ module ReleaseDrafter
       merged_pull_requests = github_client.merged_pull_requests_from_release(latest_release)
       logger.info "Merged pull requests from release #{latest_release['tag_name']}: #{merged_pull_requests.map { |pull| pull[:title] }}"
       # Get new tag and body
-      tag_name = ReleaseVersion.next_tag_name(previous_tag: latest_release['tag_name'], config: @config['changelog'])
-      body = generate_body(
+      tag_name = VersionResolver.next_tag_name(previous_tag: latest_release['tag_name'], config: @config['changelog'])
+      body = Changelog.generate_body(
         pulls: merged_pull_requests,
         changelog_config: @config['changelog'],
         previous_tag: latest_release['tag_name'],

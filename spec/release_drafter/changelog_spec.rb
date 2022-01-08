@@ -1,4 +1,4 @@
-RSpec.describe ReleaseDrafter::ReleaseChangelog do
+RSpec.describe ReleaseDrafter::Changelog do
   describe '#self.generate_body' do
     let(:previous_tag) { 'v1.0.0' }
     let(:tag) { 'v1.1.0' }
@@ -90,7 +90,7 @@ RSpec.describe ReleaseDrafter::ReleaseChangelog do
     end
 
     it 'should pass' do
-      expect(ReleaseDrafter::ReleaseChangelog.generate_body(pulls: pulls, changelog_config: config, previous_tag: previous_tag, tag: tag, repo: repo)).to eq(expected_body)
+      expect(ReleaseDrafter::Changelog.generate_body(pulls: pulls, changelog_config: config, previous_tag: previous_tag, tag: tag, repo: repo)).to eq(expected_body)
     end
   end
 end

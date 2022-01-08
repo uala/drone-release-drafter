@@ -1,5 +1,5 @@
 module ReleaseDrafter
-  class ReleaseVersion
+  class VersionResolver
     VALID_TAG_PARTS = %w[year month day micro].freeze
 
     def self.next_tag_name(previous_tag:, config:)
