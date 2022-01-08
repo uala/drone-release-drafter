@@ -17,6 +17,7 @@ module ReleaseDrafter
       @config         = {}
       @current_branch = ENV.fetch('DRONE_SOURCE_BRANCH')
       logger.debug %Q{Running plugin for branch "#{current_branch}"}
+      load_config!
     end
 
     def load_config!
@@ -36,7 +37,7 @@ module ReleaseDrafter
 
     def draft!
       # If no enviroments applicable ENVs will exit with status code 1
-      logger.warn("Release drafting not enabled for #{current_branch}") and return if (allowed_branches = ENV.fetch('PLUGIN_BRACHES')) && !allowed_branches.include?(current_branch)
+      logger.warn("Release drafting not enabled for #{current_branch}") and return if (allowed_branches = ENV.fetch('PLUGIN_BRANCHES')) && !allowed_branches.include?(current_branch)
       # Actual drafting
       logger.info "Drafting release for #{current_branch} branch..."
       github_client = GithubClient.new(
@@ -48,7 +49,7 @@ module ReleaseDrafter
       logger.warn("Release drafting not enabled for first release") and return unless latest_release
       # Get merged pull requests
       merged_pull_requests = github_client.merged_pull_requests_from_release(latest_release)
-      logger.info "Merged pull requests from release #{latest_release['tag_name']}: #{merged_pull_requests.map { |pull| pull[:title] }}"
+      logger.info "Merged pull requests from release #{latest_release['tag_name']}: #{merged_pull_requests.map { |pull| pull['title'] }}"
       # Get new tag and body
       tag_name = VersionResolver.next_tag_name(previous_tag: latest_release['tag_name'], config: @config['changelog'])
       body = Changelog.generate_body(
@@ -57,7 +58,7 @@ module ReleaseDrafter
         previous_tag: latest_release['tag_name'],
         tag: tag_name
       )
-      logger.info "New drafting tag name is: #{tag}"
+      logger.info "New drafting tag name is: #{tag_name}"
       # Draft release
       github_client.upsert_draft_release(
         tag_name: tag_name,
