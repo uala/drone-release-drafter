@@ -22,7 +22,7 @@ module ReleaseDrafter
 
     def load_config!
       @config['changelog'] = ENV.fetch('PLUGIN_CHANGELOG', {})
-      @config['calver'] = ENV.fetch('PLUGIN_CALVER', {})
+      @config['version_resolver'] = ENV.fetch('PLUGIN_VERSION_RESOLVER', {})
       logger.info "Plugin configuration: #{@config}"
     end
 
@@ -51,10 +51,13 @@ module ReleaseDrafter
       merged_pull_requests = github_client.merged_pull_requests_from_release(latest_release)
       logger.info "Merged pull requests from release #{latest_release['tag_name']}: #{merged_pull_requests.map { |pull| pull['title'] }}"
       # Get new tag and body
-      tag_name = VersionResolver.next_tag_name(previous_tag: latest_release['tag_name'], config: @config['changelog'])
+      tag_name = VersionResolver.next_tag_name(
+        previous_tag: latest_release['tag_name'],
+        config: @config['version_resolver']
+      )
       body = Changelog.generate_body(
         pulls: merged_pull_requests,
-        changelog_config: @config['changelog'],
+        config: @config['changelog'],
         previous_tag: latest_release['tag_name'],
         tag: tag_name
       )

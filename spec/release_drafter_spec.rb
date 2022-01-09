@@ -13,12 +13,14 @@ RSpec.describe ReleaseDrafter::Drafter do
       ]
     }
   end
-  let(:calver_config) do
+  let(:version_resolver_config) do
     {
-      'calver' => {
-        'year' => '%y',
-        'month' => '%m',
-        'format' => '$YEAR.$MONTH-$MICRO'
+      'version_resolver' => {
+        'calver' => {
+          'year' => '%y',
+          'month' => '%m',
+          'format' => '$YEAR.$MONTH-$MICRO'
+        }
       }
     }
   end
@@ -27,7 +29,7 @@ RSpec.describe ReleaseDrafter::Drafter do
     stub_env('DRONE_SOURCE_BRANCH', 'branch')
     stub_env('PLUGIN_BRANCHES', ['branch'])
     stub_env('PLUGIN_CHANGELOG', changelog_config)
-    stub_env('PLUGIN_CALVER', calver_config)
+    stub_env('PLUGIN_VERSION_RESOLVER', version_resolver_config)
   end
 
   describe '#dry_run?' do
@@ -92,8 +94,8 @@ RSpec.describe ReleaseDrafter::Drafter do
         expect(ReleaseDrafter::GithubClient).to receive(:new).and_return(github_client)
         expect(github_client).to receive(:latest_release).and_return(latest_release)
         expect(github_client).to receive(:merged_pull_requests_from_release).with(latest_release).and_return(merged_pull_requests)
-        expect(ReleaseDrafter::VersionResolver).to receive(:next_tag_name).with(previous_tag: latest_release['tag_name'], config: changelog_config).and_return(tag_name)
-        expect(ReleaseDrafter::Changelog).to receive(:generate_body).with(pulls: merged_pull_requests, changelog_config: changelog_config, previous_tag: latest_release['tag_name'], tag: tag_name).and_return(body)
+        expect(ReleaseDrafter::VersionResolver).to receive(:next_tag_name).with(previous_tag: latest_release['tag_name'], config: version_resolver_config).and_return(tag_name)
+        expect(ReleaseDrafter::Changelog).to receive(:generate_body).with(pulls: merged_pull_requests, config: changelog_config, previous_tag: latest_release['tag_name'], tag: tag_name).and_return(body)
         expect(github_client).not_to receive(:upsert_draft_release)
         subject.draft!
       end
@@ -124,8 +126,8 @@ RSpec.describe ReleaseDrafter::Drafter do
         expect(ReleaseDrafter::GithubClient).to receive(:new).and_return(github_client)
         expect(github_client).to receive(:latest_release).and_return(latest_release)
         expect(github_client).to receive(:merged_pull_requests_from_release).with(latest_release).and_return(merged_pull_requests)
-        expect(ReleaseDrafter::VersionResolver).to receive(:next_tag_name).with(previous_tag: latest_release['tag_name'], config: changelog_config).and_return(tag_name)
-        expect(ReleaseDrafter::Changelog).to receive(:generate_body).with(pulls: merged_pull_requests, changelog_config: changelog_config, previous_tag: latest_release['tag_name'], tag: tag_name).and_return(body)
+        expect(ReleaseDrafter::VersionResolver).to receive(:next_tag_name).with(previous_tag: latest_release['tag_name'], config: version_resolver_config).and_return(tag_name)
+        expect(ReleaseDrafter::Changelog).to receive(:generate_body).with(pulls: merged_pull_requests, config: changelog_config, previous_tag: latest_release['tag_name'], tag: tag_name).and_return(body)
         expect(github_client).to receive(:upsert_draft_release).with(tag_name: tag_name, release_name: tag_name, changelog: body)
         subject.draft!
       end

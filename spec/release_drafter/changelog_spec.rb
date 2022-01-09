@@ -90,7 +90,7 @@ RSpec.describe ReleaseDrafter::Changelog do
     end
 
     it 'should pass' do
-      expect(ReleaseDrafter::Changelog.generate_body(pulls: pulls, changelog_config: config, previous_tag: previous_tag, tag: tag, repo: repo)).to eq(expected_body)
+      expect(ReleaseDrafter::Changelog.generate_body(pulls: pulls, config: config, previous_tag: previous_tag, tag: tag, repo: repo)).to eq(expected_body)
     end
   end
 end
