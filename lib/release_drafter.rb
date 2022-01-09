@@ -2,6 +2,7 @@ require 'release_drafter/github_client'
 require 'release_drafter/changelog'
 require 'release_drafter/version_resolver'
 require 'logger'
+require 'yaml'
 
 module ReleaseDrafter
   class Error < StandardError;
@@ -21,8 +22,8 @@ module ReleaseDrafter
     end
 
     def load_config!
-      @config['changelog'] = ENV.fetch('PLUGIN_CHANGELOG', {})
-      @config['version_resolver'] = ENV.fetch('PLUGIN_VERSION_RESOLVER', {})
+      @config['changelog'] = YAML.safe_load(ENV.fetch('PLUGIN_CHANGELOG', ''))
+      @config['version_resolver'] = YAML.safe_load(ENV.fetch('PLUGIN_VERSION_RESOLVER', ''))
       logger.info "Plugin configuration: #{@config}"
     end
 

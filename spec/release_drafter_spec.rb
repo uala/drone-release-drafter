@@ -3,6 +3,15 @@ RSpec.describe ReleaseDrafter::Drafter do
 
   let(:github_client) { double }
 
+  let(:input_changelog_config) do
+    <<~YAML
+      categories:
+        - title: New Features
+          labels:
+            - new feature
+            - enhancement
+    YAML
+  end
   let(:changelog_config) do
     {
       'categories' => [
@@ -12,6 +21,15 @@ RSpec.describe ReleaseDrafter::Drafter do
         }
       ]
     }
+  end
+  let(:input_version_resolver_config) do
+    <<~YAML
+      version_resolver:
+        calver:
+          year: '%y'
+          month: '%m'
+          format: '$YEAR.$MONTH-$MICRO'
+    YAML
   end
   let(:version_resolver_config) do
     {
@@ -28,8 +46,8 @@ RSpec.describe ReleaseDrafter::Drafter do
   before do
     stub_env('DRONE_SOURCE_BRANCH', 'branch')
     stub_env('PLUGIN_BRANCHES', ['branch'])
-    stub_env('PLUGIN_CHANGELOG', changelog_config)
-    stub_env('PLUGIN_VERSION_RESOLVER', version_resolver_config)
+    stub_env('PLUGIN_CHANGELOG', input_changelog_config)
+    stub_env('PLUGIN_VERSION_RESOLVER', input_version_resolver_config)
   end
 
   describe '#dry_run?' do
