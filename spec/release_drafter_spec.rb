@@ -88,6 +88,39 @@ RSpec.describe ReleaseDrafter::Drafter do
       let(:body) { 'Release body' }
 
       it do
+        stub_env('PLUGIN_DRY_RUN', true)
+        expect(ReleaseDrafter::GithubClient).to receive(:new).and_return(github_client)
+        expect(github_client).to receive(:latest_release).and_return(latest_release)
+        expect(github_client).to receive(:merged_pull_requests_from_release).with(latest_release).and_return(merged_pull_requests)
+        expect(ReleaseDrafter::VersionResolver).to receive(:next_tag_name).with(previous_tag: latest_release['tag_name'], config: changelog_config).and_return(tag_name)
+        expect(ReleaseDrafter::Changelog).to receive(:generate_body).with(pulls: merged_pull_requests, changelog_config: changelog_config, previous_tag: latest_release['tag_name'], tag: tag_name).and_return(body)
+        expect(github_client).not_to receive(:upsert_draft_release)
+        subject.draft!
+      end
+    end
+
+    context 'dry run' do
+      let(:latest_release) do
+        {
+          'tag_name' => '22.01-2'
+        }
+      end
+      let(:merged_pull_requests) do
+        [
+          {
+            'title' => 'Pull request 4',
+            'labels' => [{ 'name' => 'bugfix' }],
+            'user' => {
+              'login' => 'user1'
+            },
+            'html_url' => 'https://github.com/test/test/pulls/4'
+          }
+        ]
+      end
+      let(:tag_name) { '22.01-3' }
+      let(:body) { 'Release body' }
+
+      it do
         expect(ReleaseDrafter::GithubClient).to receive(:new).and_return(github_client)
         expect(github_client).to receive(:latest_release).and_return(latest_release)
         expect(github_client).to receive(:merged_pull_requests_from_release).with(latest_release).and_return(merged_pull_requests)
