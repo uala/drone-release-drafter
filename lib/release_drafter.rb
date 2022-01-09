@@ -12,10 +12,11 @@ module ReleaseDrafter
   MissingConfig = Class.new(Error)
 
   class Drafter
-    attr_reader :logger, :config, :current_branch
+    attr_reader :logger, :config, :current_branch, :repository
 
     def initialize
-      @config         = {}
+      @config = {}
+      @repository = ENV.fetch('DRONE_REPO').to_s.downcase
       @current_branch = ENV.fetch('DRONE_SOURCE_BRANCH')
       logger.debug %Q{Running plugin for branch "#{current_branch}"}
       load_config!
@@ -42,7 +43,7 @@ module ReleaseDrafter
       # Actual drafting
       logger.info "Drafting release for #{current_branch} branch..."
       github_client = GithubClient.new(
-        repository: ENV['DRONE_REPO'].to_s.downcase,
+        repository: repository,
         access_token: ENV['GITHUB_PUBLISH_TOKEN']
       )
       latest_release = github_client.latest_release
@@ -60,7 +61,8 @@ module ReleaseDrafter
         pulls: merged_pull_requests,
         config: @config['changelog'],
         previous_tag: latest_release['tag_name'],
-        tag: tag_name
+        tag: tag_name,
+        repository: repository
       )
       logger.info "New drafting tag name is: #{tag_name}, body: #{body}"
       # Draft release

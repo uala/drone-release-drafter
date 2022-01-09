@@ -2,7 +2,7 @@ RSpec.describe ReleaseDrafter::Changelog do
   describe '#self.generate_body' do
     let(:previous_tag) { 'v1.0.0' }
     let(:tag) { 'v1.1.0' }
-    let(:repo) { 'test/test' }
+    let(:repository) { 'test/test' }
     let(:pulls) do
       [
         {
@@ -90,7 +90,7 @@ RSpec.describe ReleaseDrafter::Changelog do
     end
 
     it 'should pass' do
-      expect(ReleaseDrafter::Changelog.generate_body(pulls: pulls, config: config, previous_tag: previous_tag, tag: tag, repo: repo)).to eq(expected_body)
+      expect(ReleaseDrafter::Changelog.generate_body(pulls: pulls, config: config, previous_tag: previous_tag, tag: tag, repository: repository)).to eq(expected_body)
     end
   end
 end

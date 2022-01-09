@@ -1,6 +1,6 @@
 module ReleaseDrafter
   class Changelog
-    def self.generate_body(pulls:, config:, previous_tag:, tag:, repo:)
+    def self.generate_body(pulls:, config:, previous_tag:, tag:, repository:)
       pulls_changelog = _categorize_pulls(pulls: pulls, pulls_config: config['categories']).map do |(category, category_pulls)|
         category_changelog = category_pulls.map { |pull| "* #{pull['title']} by @#{pull['user']['login']} in #{pull['html_url']}" }.join("\n")
         <<~BODY
@@ -15,7 +15,7 @@ module ReleaseDrafter
         ## What's Changed
         #{pulls_changelog.join}
 
-        **Full Changelog**: https://github.com/#{repo}/compare/#{previous_tag}...#{tag}
+        **Full Changelog**: https://github.com/#{repository}/compare/#{previous_tag}...#{tag}
       BODY
     end
 

@@ -1,6 +1,8 @@
 RSpec.describe ReleaseDrafter::Drafter do
   subject { described_class.new }
 
+  let(:repository) { 'test/test' }
+  let(:access_token) { '<GITHUB_TOKEN>' }
   let(:github_client) { double }
 
   let(:input_changelog_config) do
@@ -44,6 +46,8 @@ RSpec.describe ReleaseDrafter::Drafter do
   end
 
   before do
+    stub_env('DRONE_REPO', repository)
+    stub_env('GITHUB_PUBLISH_TOKEN', access_token)
     stub_env('DRONE_SOURCE_BRANCH', 'branch')
     stub_env('PLUGIN_BRANCHES', ['branch'])
     stub_env('PLUGIN_CHANGELOG', input_changelog_config)
@@ -109,11 +113,11 @@ RSpec.describe ReleaseDrafter::Drafter do
 
       it do
         stub_env('PLUGIN_DRY_RUN', true)
-        expect(ReleaseDrafter::GithubClient).to receive(:new).and_return(github_client)
+        expect(ReleaseDrafter::GithubClient).to receive(:new).with(repository: repository, access_token: access_token).and_return(github_client)
         expect(github_client).to receive(:latest_release).and_return(latest_release)
         expect(github_client).to receive(:merged_pull_requests_from_release).with(latest_release).and_return(merged_pull_requests)
         expect(ReleaseDrafter::VersionResolver).to receive(:next_tag_name).with(previous_tag: latest_release['tag_name'], config: version_resolver_config).and_return(tag_name)
-        expect(ReleaseDrafter::Changelog).to receive(:generate_body).with(pulls: merged_pull_requests, config: changelog_config, previous_tag: latest_release['tag_name'], tag: tag_name).and_return(body)
+        expect(ReleaseDrafter::Changelog).to receive(:generate_body).with(pulls: merged_pull_requests, config: changelog_config, previous_tag: latest_release['tag_name'], tag: tag_name, repository: repository).and_return(body)
         expect(github_client).not_to receive(:upsert_draft_release)
         subject.draft!
       end
@@ -141,11 +145,11 @@ RSpec.describe ReleaseDrafter::Drafter do
       let(:body) { 'Release body' }
 
       it do
-        expect(ReleaseDrafter::GithubClient).to receive(:new).and_return(github_client)
+        expect(ReleaseDrafter::GithubClient).to receive(:new).with(repository: repository, access_token: access_token).and_return(github_client)
         expect(github_client).to receive(:latest_release).and_return(latest_release)
         expect(github_client).to receive(:merged_pull_requests_from_release).with(latest_release).and_return(merged_pull_requests)
         expect(ReleaseDrafter::VersionResolver).to receive(:next_tag_name).with(previous_tag: latest_release['tag_name'], config: version_resolver_config).and_return(tag_name)
-        expect(ReleaseDrafter::Changelog).to receive(:generate_body).with(pulls: merged_pull_requests, config: changelog_config, previous_tag: latest_release['tag_name'], tag: tag_name).and_return(body)
+        expect(ReleaseDrafter::Changelog).to receive(:generate_body).with(pulls: merged_pull_requests, config: changelog_config, previous_tag: latest_release['tag_name'], tag: tag_name, repository: repository).and_return(body)
         expect(github_client).to receive(:upsert_draft_release).with(tag_name: tag_name, release_name: tag_name, changelog: body)
         subject.draft!
       end
