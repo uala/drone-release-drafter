@@ -28,7 +28,7 @@ module ReleaseDrafter
       if (draft_release = _latest_draft_release)
         @client.update_release(draft_release['url'], release_attrs)
       else
-        @client.create_release(@repo, new_tag, release_attrs)
+        @client.create_release(@repository, tag_name, release_attrs)
       end
     end
 
