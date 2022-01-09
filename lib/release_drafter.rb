@@ -64,13 +64,16 @@ module ReleaseDrafter
         tag: tag_name,
         repository: repository
       )
-      logger.info "New drafting tag name is: #{tag_name}, body: #{body}"
+      logger.info "New drafting tag name details:\nTag: #{tag_name}, Body:\n#{body}"
       # Draft release
-      github_client.upsert_draft_release(
-        tag_name: tag_name,
-        release_name: tag_name,
-        changelog: body
-      ) unless dry_run?
+      if !dry_run?
+        drafted_release = github_client.upsert_draft_release(
+          tag_name: tag_name,
+          release_name: tag_name,
+          changelog: body
+        )
+        logger.info "Drafted release #{drafted_release['tag_name']}: #{drafted_release['html_url']}"
+      end
     end
 
     private
