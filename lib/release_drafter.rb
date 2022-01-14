@@ -39,19 +39,17 @@ module ReleaseDrafter
     end
 
     def draft!
-      # If no enviroments applicable ENVs will exit with status code 1
-      logger.warn("Release drafting not enabled for #{current_branch}".yellow) and return if (allowed_branches = ENV.fetch('PLUGIN_BRANCHES')) && !allowed_branches.include?(current_branch)
-      # Actual drafting
-      logger.info "Drafting release for #{current_branch} branch...".green
-      github_client = GithubClient.new(
+      @github_client = GithubClient.new(
         repository: repository,
         access_token: ENV['GITHUB_PUBLISH_TOKEN']
       )
-      latest_release = github_client.latest_release
-      # If no comparison release exists will exit with status code 1
-      logger.error("Release drafting not enabled for first release".red) and return unless latest_release
+      return unless should_run?
+
+      # Actual drafting
+      logger.info "Drafting release for #{current_branch} branch...".green
+      latest_release = @github_client.latest_release
       # Get merged pull requests
-      merged_pull_requests = github_client.merged_pull_requests_from_release(latest_release)
+      merged_pull_requests = @github_client.merged_pull_requests_from_release(latest_release)
       logger.info "Merged pull requests from release #{latest_release['tag_name']}: ".yellow + "#{merged_pull_requests.map { |pull| pull['title'] }}"
       # Get new tag and body
       tag_name = VersionResolver.next_tag_name(
@@ -68,7 +66,7 @@ module ReleaseDrafter
       logger.info "New drafting tag name details:\n".green + "Tag: #{tag_name}\n" + "Body:\n#{body}"
       # Draft release
       if !dry_run?
-        drafted_release = github_client.upsert_draft_release(
+        drafted_release = @github_client.upsert_draft_release(
           tag_name: tag_name,
           release_name: tag_name,
           changelog: body
@@ -78,6 +76,17 @@ module ReleaseDrafter
     end
 
     private
+
+    def should_run?
+      # If no enviroments applicable ENVs will exit with status code 1
+      logger.warn("Release drafting not enabled for #{current_branch}".yellow) and return false if (allowed_branches = ENV.fetch('PLUGIN_BRANCHES')) && !allowed_branches.include?(current_branch)
+      # If no comparison release exists will exit with status code 1
+      logger.error("Release drafting not enabled for first release".red) and return unless @github_client.latest_release
+      # If HEAD enforced but not on HEAD will exit with status code 1
+      logger.error("Release drafting enabled HEAD only".red) and return unless @github_client.head_commit_sha == ENV['DRONE_COMMIT_SHA'] && !ENV.fetch('PLUGIN_ENFORCE_HEAD', nil).to_s.empty?
+
+      true
+    end
 
     # Logger for output
     def logger

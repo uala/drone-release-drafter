@@ -62,6 +62,7 @@ steps:
           format: '$YEAR.$MONTH-$MICRO'
       branches:
         - main
+      enforce_head: true
 ```
 
 Plugin image will read the given config and draft (create or update) a new release.
@@ -81,6 +82,7 @@ The plugin accepts the following settings:
 * `logging`: logging level of plugin, default is `info`, supported values: [any Ruby logger valid level](https://ruby-doc.org/stdlib-2.4.0/libdoc/logger/rdoc/Logger.html#class-Logger-label-Description)
 * `version_resolver`: object describing how to resolve next release tag/name
 * `branches`: array of branches' names where the plugin should run, an empty field means all branches are enabled
+* `enforce_head`: boolean any non empty string will be considered as true, will skip plugin logic if not on HEAD commit
 
 #### Changelog
 

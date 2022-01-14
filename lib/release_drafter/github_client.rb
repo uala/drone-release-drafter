@@ -32,6 +32,10 @@ module ReleaseDrafter
       end
     end
 
+    def head_commit_sha
+      @client.commits(@repository, @committish_branch, { per_page: 1 }).first.sha
+    end
+
     private
 
     def _get_commits_from_ref(ref)

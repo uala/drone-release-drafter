@@ -52,6 +52,8 @@ RSpec.describe ReleaseDrafter::Drafter do
     stub_env('PLUGIN_BRANCHES', ['branch'])
     stub_env('PLUGIN_CHANGELOG', input_changelog_config)
     stub_env('PLUGIN_VERSION_RESOLVER', input_version_resolver_config)
+    stub_env('PLUGIN_ENFORCE_HEAD', true)
+    stub_env('DRONE_COMMIT_SHA', 'abc')
   end
 
   describe '#dry_run?' do
@@ -73,7 +75,7 @@ RSpec.describe ReleaseDrafter::Drafter do
       end
 
       it do
-        expect(ReleaseDrafter::GithubClient).not_to receive(:new)
+        expect(ReleaseDrafter::GithubClient).to receive(:new).and_return(github_client)
         expect(ReleaseDrafter::VersionResolver).not_to receive(:next_tag_name)
         expect(ReleaseDrafter::Changelog).not_to receive(:generate_body)
         expect(subject.draft!).to be_nil
@@ -84,6 +86,23 @@ RSpec.describe ReleaseDrafter::Drafter do
       it do
         expect(ReleaseDrafter::GithubClient).to receive(:new).and_return(github_client)
         expect(github_client).to receive(:latest_release).and_return(nil)
+        expect(ReleaseDrafter::VersionResolver).not_to receive(:next_tag_name)
+        expect(ReleaseDrafter::Changelog).not_to receive(:generate_body)
+        expect(subject.draft!).to be_nil
+      end
+    end
+
+    context 'not on HEAD' do
+      let(:latest_release) do
+        {
+          'tag_name' => '22.01-2'
+        }
+      end
+
+      it do
+        expect(ReleaseDrafter::GithubClient).to receive(:new).and_return(github_client)
+        expect(github_client).to receive(:latest_release).and_return(latest_release)
+        expect(github_client).to receive(:head_commit_sha).and_return('def')
         expect(ReleaseDrafter::VersionResolver).not_to receive(:next_tag_name)
         expect(ReleaseDrafter::Changelog).not_to receive(:generate_body)
         expect(subject.draft!).to be_nil
@@ -119,7 +138,8 @@ RSpec.describe ReleaseDrafter::Drafter do
 
       it do
         expect(ReleaseDrafter::GithubClient).to receive(:new).with(repository: repository, access_token: access_token).and_return(github_client)
-        expect(github_client).to receive(:latest_release).and_return(latest_release)
+        expect(github_client).to receive(:latest_release).and_return(latest_release).twice
+        expect(github_client).to receive(:head_commit_sha).and_return('abc')
         expect(github_client).to receive(:merged_pull_requests_from_release).with(latest_release).and_return(merged_pull_requests)
         expect(ReleaseDrafter::VersionResolver).to receive(:next_tag_name).with(previous_tag: latest_release['tag_name'], config: version_resolver_config).and_return(tag_name)
         expect(ReleaseDrafter::Changelog).to receive(:generate_body).with(pulls: merged_pull_requests, config: changelog_config, previous_tag: latest_release['tag_name'], tag: tag_name, repository: repository).and_return(body)
@@ -152,7 +172,8 @@ RSpec.describe ReleaseDrafter::Drafter do
       it do
         stub_env('PLUGIN_DRY_RUN', true)
         expect(ReleaseDrafter::GithubClient).to receive(:new).with(repository: repository, access_token: access_token).and_return(github_client)
-        expect(github_client).to receive(:latest_release).and_return(latest_release)
+        expect(github_client).to receive(:latest_release).and_return(latest_release).twice
+        expect(github_client).to receive(:head_commit_sha).and_return('abc')
         expect(github_client).to receive(:merged_pull_requests_from_release).with(latest_release).and_return(merged_pull_requests)
         expect(ReleaseDrafter::VersionResolver).to receive(:next_tag_name).with(previous_tag: latest_release['tag_name'], config: version_resolver_config).and_return(tag_name)
         expect(ReleaseDrafter::Changelog).to receive(:generate_body).with(pulls: merged_pull_requests, config: changelog_config, previous_tag: latest_release['tag_name'], tag: tag_name, repository: repository).and_return(body)
