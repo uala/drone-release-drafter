@@ -26,21 +26,18 @@ RSpec.describe ReleaseDrafter::Drafter do
   end
   let(:input_version_resolver_config) do
     <<~YAML
-      version_resolver:
-        calver:
-          year: '%y'
-          month: '%m'
-          format: '$YEAR.$MONTH-$MICRO'
+      calver:
+        year: '%y'
+        month: '%m'
+        format: '$YEAR.$MONTH-$MICRO'
     YAML
   end
   let(:version_resolver_config) do
     {
-      'version_resolver' => {
-        'calver' => {
-          'year' => '%y',
-          'month' => '%m',
-          'format' => '$YEAR.$MONTH-$MICRO'
-        }
+      'calver' => {
+        'year' => '%y',
+        'month' => '%m',
+        'format' => '$YEAR.$MONTH-$MICRO'
       }
     }
   end
