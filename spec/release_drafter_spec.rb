@@ -41,6 +41,11 @@ RSpec.describe ReleaseDrafter::Drafter do
       }
     }
   end
+  let(:input_branches) do
+    <<~YAML
+      - branch
+    YAML
+  end
   let(:input_release_labels) do
     <<~YAML
       - automatic release
@@ -51,7 +56,7 @@ RSpec.describe ReleaseDrafter::Drafter do
     stub_env('DRONE_REPO', repository)
     stub_env('GITHUB_PUBLISH_TOKEN', access_token)
     stub_env('DRONE_SOURCE_BRANCH', 'branch')
-    stub_env('PLUGIN_BRANCHES', ['branch'])
+    stub_env('PLUGIN_BRANCHES', input_branches)
     stub_env('PLUGIN_CHANGELOG', input_changelog_config)
     stub_env('PLUGIN_VERSION_RESOLVER', input_version_resolver_config)
     stub_env('PLUGIN_ENFORCE_HEAD', true)
@@ -74,8 +79,10 @@ RSpec.describe ReleaseDrafter::Drafter do
 
   describe '#should_run?' do
     context 'branch not enabled' do
-      before do
-        stub_env('PLUGIN_BRANCHES', ['not-branch'])
+      let(:input_branches) do
+        <<~YAML
+          - not-branch
+        YAML
       end
 
       it do
