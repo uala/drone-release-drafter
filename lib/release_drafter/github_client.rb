@@ -16,12 +16,12 @@ module ReleaseDrafter
       _get_commit_associated_closed_pulls(_get_commits_from_ref(release['tag_name']))
     end
 
-    def upsert_draft_release(tag_name:, release_name:, changelog:)
+    def upsert_draft_release(tag_name:, release_name:, changelog:, draft: true)
       release_attrs = {
         tag_name: tag_name,
         name: release_name,
         body: changelog,
-        draft: true,
+        draft: !!draft,
         target_commitish: @committish_branch
       }
 
