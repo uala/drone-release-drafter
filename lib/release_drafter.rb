@@ -97,7 +97,7 @@ module ReleaseDrafter
 
     def should_release?(merged_pull_requests)
       release_labels = YAML.safe_load(ENV.fetch('PLUGIN_RELEASE_LABELS', ''))
-      return false unless release_labels&.any? && merged_pull_requests&.any?
+      return false unless ENV['DRONE_BUILD_STATUS'] == 'success' && release_labels&.any? && merged_pull_requests&.any?
 
       merged_pull_requests.all? do |pull|
         (pull['labels'].map { |l| l['name'] } & release_labels).any?

@@ -85,7 +85,7 @@ The plugin accepts the following settings:
 * `version_resolver`: object describing how to resolve next release tag/name
 * `branches`: array of branches' names where the plugin should run, an empty field means all branches are enabled
 * `enforce_head`: boolean any non empty string will be considered as true, will skip plugin logic if not on HEAD commit
-* `release_labels`: array of labels that will trigger automatic release if all merged pulls contains at least one of the specified labels
+* `release_labels`: array of labels that will trigger automatic release if all merged pulls contains at least one of the specified labels. Please note that Drone build must be succeding (`DRONE_BUILD_STATUS=success`).
 
 #### Changelog
 

@@ -57,6 +57,7 @@ RSpec.describe ReleaseDrafter::Drafter do
     stub_env('PLUGIN_ENFORCE_HEAD', true)
     stub_env('DRONE_COMMIT_SHA', 'abc')
     stub_env('PLUGIN_RELEASE_LABELS', input_release_labels)
+    stub_env('DRONE_BUILD_STATUS', 'success')
   end
 
   describe '#dry_run?' do
@@ -114,6 +115,84 @@ RSpec.describe ReleaseDrafter::Drafter do
           expect(github_client).to receive(:latest_release).and_return(latest_release)
           expect(subject.send(:should_run?)).to eq true
         end
+      end
+    end
+  end
+
+  describe '#should_release?' do
+    let(:merged_pull_requests) do
+      [
+        {
+          'title' => 'Pull request 4',
+          'labels' => [{ 'name' => 'bugfix' }],
+          'user' => {
+            'login' => 'user1'
+          },
+          'html_url' => 'https://github.com/test/test/pulls/4'
+        },
+        {
+          'title' => 'Pull request 6',
+          'labels' => [{ 'name' => 'automatic release' }],
+          'user' => {
+            'login' => 'user1'
+          },
+          'html_url' => 'https://github.com/test/test/pulls/6'
+        }
+      ]
+    end
+
+    context 'build failing not set' do
+      before do
+        stub_env('DRONE_BUILD_STATUS', 'failure')
+      end
+
+      it do
+        expect(subject.send(:should_release?, merged_pull_requests)).to eq false
+      end
+    end
+
+    context 'labels not set' do
+      before do
+        stub_env('PLUGIN_RELEASE_LABELS', nil)
+      end
+
+      it do
+        expect(subject.send(:should_release?, merged_pull_requests)).to eq false
+      end
+    end
+
+    context 'no merged pulls' do
+      let(:merged_pull_requests) do
+        []
+      end
+
+      it do
+        expect(subject.send(:should_release?, merged_pull_requests)).to eq false
+      end
+    end
+
+    context 'not all pulls matches' do
+      it do
+        expect(subject.send(:should_release?, merged_pull_requests)).to eq false
+      end
+    end
+
+    context 'all pulls matches' do
+      let(:merged_pull_requests) do
+        [
+          {
+            'title' => 'Pull request 6',
+            'labels' => [{ 'name' => 'automatic release' }],
+            'user' => {
+              'login' => 'user1'
+            },
+            'html_url' => 'https://github.com/test/test/pulls/6'
+          }
+        ]
+      end
+
+      it do
+        expect(subject.send(:should_release?, merged_pull_requests)).to eq true
       end
     end
   end
