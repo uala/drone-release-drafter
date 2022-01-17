@@ -86,11 +86,11 @@ module ReleaseDrafter
 
     def should_run?
       # If no enviroments applicable ENVs will exit with status code 1
-      logger.warn("Release drafting not enabled for #{current_branch}".yellow) and return false if (allowed_branches = ENV.fetch('PLUGIN_BRANCHES')) && !allowed_branches.include?(current_branch)
+      logger.warn("Release drafting not enabled for #{current_branch}".red) and return false if (allowed_branches = ENV.fetch('PLUGIN_BRANCHES')) && !allowed_branches.include?(current_branch)
       # If no comparison release exists will exit with status code 1
-      logger.error("Release drafting not enabled for first release".red) and return unless @github_client.latest_release
+      logger.warn("Release drafting not enabled for first release".red) and return false unless @github_client.latest_release
       # If HEAD enforced but not on HEAD will exit with status code 1
-      logger.error("Release drafting enabled HEAD only".red) and return unless @github_client.head_commit_sha == ENV['DRONE_COMMIT_SHA'] && !ENV.fetch('PLUGIN_ENFORCE_HEAD', nil).to_s.empty?
+      logger.warn("Release drafting enabled HEAD only".red) and return false unless ENV.fetch('PLUGIN_ENFORCE_HEAD', nil).to_s.empty? || @github_client.head_commit_sha == ENV['DRONE_COMMIT_SHA']
 
       true
     end

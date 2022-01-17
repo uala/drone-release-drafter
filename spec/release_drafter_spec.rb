@@ -71,27 +71,22 @@ RSpec.describe ReleaseDrafter::Drafter do
     end
   end
 
-  describe '#draft!' do
+  describe '#should_run?' do
     context 'branch not enabled' do
       before do
         stub_env('PLUGIN_BRANCHES', ['not-branch'])
       end
 
       it do
-        expect(ReleaseDrafter::GithubClient).to receive(:new).and_return(github_client)
-        expect(ReleaseDrafter::VersionResolver).not_to receive(:next_tag_name)
-        expect(ReleaseDrafter::Changelog).not_to receive(:generate_body)
-        expect(subject.draft!).to be_nil
+        expect(subject.send(:should_run?)).to eq false
       end
     end
 
     context 'missing latest release' do
       it do
-        expect(ReleaseDrafter::GithubClient).to receive(:new).and_return(github_client)
+        subject.instance_variable_set(:@github_client, github_client)
         expect(github_client).to receive(:latest_release).and_return(nil)
-        expect(ReleaseDrafter::VersionResolver).not_to receive(:next_tag_name)
-        expect(ReleaseDrafter::Changelog).not_to receive(:generate_body)
-        expect(subject.draft!).to be_nil
+        expect(subject.send(:should_run?)).to eq false
       end
     end
 
@@ -103,15 +98,27 @@ RSpec.describe ReleaseDrafter::Drafter do
       end
 
       it do
-        expect(ReleaseDrafter::GithubClient).to receive(:new).and_return(github_client)
+        subject.instance_variable_set(:@github_client, github_client)
         expect(github_client).to receive(:latest_release).and_return(latest_release)
         expect(github_client).to receive(:head_commit_sha).and_return('def')
-        expect(ReleaseDrafter::VersionResolver).not_to receive(:next_tag_name)
-        expect(ReleaseDrafter::Changelog).not_to receive(:generate_body)
-        expect(subject.draft!).to be_nil
+        expect(subject.send(:should_run?)).to eq false
+      end
+
+      context 'enabled' do
+        before do
+          stub_env('PLUGIN_ENFORCE_HEAD', nil)
+        end
+
+        it do
+          subject.instance_variable_set(:@github_client, github_client)
+          expect(github_client).to receive(:latest_release).and_return(latest_release)
+          expect(subject.send(:should_run?)).to eq true
+        end
       end
     end
+  end
 
+  describe '#draft!' do
     context 'draft release' do
       let(:latest_release) do
         {
