@@ -9,7 +9,11 @@ module ReleaseDrafter
     end
 
     def latest_release
-      @client.latest_release(@repository)
+      # Cannot use @client.latest_release because the release sorting is not consistent
+      # with API specs. It should follow release.commit.created_at but it is not, so
+      # it's better to retrieve latest releases and pick the latest one using fixed
+      # sorting logic.
+      _latest_release
     end
 
     def merged_pull_requests_from_release(release)
@@ -25,7 +29,7 @@ module ReleaseDrafter
         target_commitish: @committish_branch
       }
 
-      if (draft_release = _latest_draft_release)
+      if (draft_release = _latest_release(draft: true))
         @client.update_release(draft_release['url'], release_attrs)
       else
         @client.create_release(@repository, tag_name, release_attrs)
@@ -50,9 +54,11 @@ module ReleaseDrafter
       end
     end
 
-    def _latest_draft_release
-      @client.releases(@repository).find do |release|
-        release['draft'] == true
+    def _latest_release(draft: false)
+      @client.releases(@repository, per_page: 100).sort_by do |release|
+        release.published_at || release.created_at
+      end.reverse.find do |release|
+        release.draft? == draft
       end
     end
   end
