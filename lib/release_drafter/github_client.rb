@@ -54,11 +54,11 @@ module ReleaseDrafter
       end
     end
 
-    def _latest_release(draft: false)
+    def _latest_release(draft: false, prerelease: false)
       @client.releases(@repository, per_page: 100).sort_by do |release|
         release.published_at || release.created_at
       end.reverse.find do |release|
-        release.draft? == draft
+        release.draft? == draft && release.prerelease? == prerelease
       end
     end
   end
